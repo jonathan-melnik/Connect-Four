@@ -343,8 +343,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be3b9cbe3b5424fa89099f7680efa6df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  topLeftPoint: {fileID: 1928453856}
-  bottomRightPoint: {fileID: 1435535719}
+  _topLeftPoint: {fileID: 1928453856}
+  _bottomRightPoint: {fileID: 1435535719}
+  _discPrefab: {fileID: 6572966539873278119, guid: f6e8bc50df94f4f2cbb30bcb7e7cc83d,
+    type: 3}
 --- !u!1 &1311805671
 GameObject:
   m_ObjectHideFlags: 0
