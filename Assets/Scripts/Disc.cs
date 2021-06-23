@@ -4,8 +4,17 @@ using UnityEngine;
 
 public class Disc : MonoBehaviour
 {
-    public void Initialize(bool isRed)
+    public DiscColor Color { get; private set; }
+
+    public void Initialize(DiscColor color)
     {
-        GetComponent<SpriteRenderer>().color = isRed ? Color.red : Color.black;
+        Color = color;
+        GetComponent<SpriteRenderer>().color = color == DiscColor.Red ? UnityEngine.Color.red : UnityEngine.Color.black;
     }
+}
+
+public enum DiscColor
+{
+    Red,
+    Black
 }
