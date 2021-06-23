@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class PlayerController : Controller
 {
-    public override void CanMove(bool value)
+    public override void CanMove(bool canMove)
     {
-        enabled = value;
+        enabled = canMove;
     }
 
     private void Update()

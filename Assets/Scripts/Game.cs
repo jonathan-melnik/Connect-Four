@@ -27,15 +27,7 @@ public class Game : MonoBehaviour
             return;
         }
 
-        if (_board.AddDiscAtColumn(col))
-        {
-            ShowWin(DiscColor.Red);
-        }
-        else
-        {
-            _blackController.CanMove(true);
-            _redController.CanMove(false);
-        }
+        AddDiscAtColumn(col, DiscColor.Red);
     }
 
     private void OnAddedBlackDiscAtColumn(int col)
@@ -45,14 +37,26 @@ public class Game : MonoBehaviour
             return;
         }
 
-        if (_board.AddDiscAtColumn(col))
+        AddDiscAtColumn(col, DiscColor.Black);
+    }
+
+    void AddDiscAtColumn(int col, DiscColor color)
+    {
+        _blackController.CanMove(false);
+        _redController.CanMove(false);
+
+        if (_board.AddDiscAtColumn(col, color))
         {
-            ShowWin(DiscColor.Black);
+            ShowWin(color);
+        }
+        else if (_board.IsComplete())
+        {
+            ShowBoardComplete();
         }
         else
         {
-            _redController.CanMove(true);
-            _blackController.CanMove(false);
+            _blackController.CanMove(color == DiscColor.Red);
+            _redController.CanMove(color == DiscColor.Black);
         }
     }
 
@@ -65,6 +69,11 @@ public class Game : MonoBehaviour
     }
 
     private void ShowWin(DiscColor color)
+    {
+
+    }
+
+    private void ShowBoardComplete()
     {
 
     }

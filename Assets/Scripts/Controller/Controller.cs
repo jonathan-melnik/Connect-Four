@@ -14,5 +14,5 @@ public abstract class Controller : MonoBehaviour
         CanMove(canMove);
     }
 
-    public abstract void CanMove(bool value);
+    public abstract void CanMove(bool canMove);
 }

@@ -10,13 +10,13 @@ public class Board : MonoBehaviour
     [SerializeField] private Transform _discsContainer;
 
     private Disc[] _discs;
-    private bool _redPlays = true;
     private List<Vector2Int> _directions;
+    private int _discsCount;
 
     private const float COLUMN_WIDTH = 0.9f;
     private const float ROW_HEIGHT = 0.8f;
-    private const int COLUMNS = 7;
-    private const int ROWS = 6;
+    public const int COLUMNS = 7;
+    public const int ROWS = 6;
 
     private void Start()
     {
@@ -43,16 +43,15 @@ public class Board : MonoBehaviour
         return GetDisc(col, 5) == null;
     }
 
-    public bool AddDiscAtColumn(int col)
+    public bool AddDiscAtColumn(int col, DiscColor color)
     {
         var disc = Instantiate(_discPrefab);
         int row = NextRowAtColumn(col);
         disc.transform.position = GetBoardPosition(col, row);
         disc.transform.SetParent(_discsContainer, false);
-        disc.Initialize(color: _redPlays ? DiscColor.Red : DiscColor.Black);
+        disc.Initialize(color);
         SetDisc(col, row, disc);
-
-        _redPlays = !_redPlays;
+        _discsCount++;
 
         return CheckFourInARow(col, row);
     }
@@ -135,5 +134,10 @@ public class Board : MonoBehaviour
         }
         Debug.Log("Match from (" + col + ", " + row + ") with direction (" + hDir + ", " + vDir + ")");
         return true;
+    }
+
+    public bool IsComplete()
+    {
+        return _discsCount == ROWS * COLUMNS;
     }
 }
