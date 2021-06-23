@@ -38,24 +38,13 @@ public class Board : MonoBehaviour
         };
     }
 
-    private void Update()
+    public bool CanAddDiscAtColumn(int col)
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            int col = GetColumnWithMousePos(Input.mousePosition);
-            if (col != -1)
-            {
-                AddDiscAtColumn(col);
-            }
-        }
+        return GetDisc(col, 5) == null;
     }
 
-    private void AddDiscAtColumn(int col)
+    public bool AddDiscAtColumn(int col)
     {
-        if (GetDisc(col, 5) != null)
-        {
-            return;
-        }
         var disc = Instantiate(_discPrefab);
         int row = NextRowAtColumn(col);
         disc.transform.position = GetBoardPosition(col, row);
@@ -65,10 +54,10 @@ public class Board : MonoBehaviour
 
         _redPlays = !_redPlays;
 
-        CheckFourInARow(col, row);
+        return CheckFourInARow(col, row);
     }
 
-    private int GetColumnWithMousePos(Vector3 mousePos)
+    public int GetColumnWithMousePos(Vector3 mousePos)
     {
         var pos = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, -Camera.main.transform.position.z));
 
