@@ -11,6 +11,7 @@ public class Board : MonoBehaviour
 
     private Disc[] _discs;
     private bool _redPlays = true;
+    private List<Vector2Int> _directions;
 
     private const float COLUMN_WIDTH = 0.9f;
     private const float ROW_HEIGHT = 0.8f;
@@ -24,6 +25,17 @@ public class Board : MonoBehaviour
         {
             _discs[i] = null;
         }
+
+        _directions = new List<Vector2Int>()
+        {
+            new Vector2Int(1,0),
+            new Vector2Int(-1,0),
+            new Vector2Int(0, -1),
+            new Vector2Int(1,1),
+            new Vector2Int(1,-1),
+            new Vector2Int(-1, 1),
+            new Vector2Int(-1, -1)
+        };
     }
 
     private void Update()
@@ -53,7 +65,7 @@ public class Board : MonoBehaviour
 
         _redPlays = !_redPlays;
 
-        CheckFourInARow();
+        CheckFourInARow(col, row);
     }
 
     private int GetColumnWithMousePos(Vector3 mousePos)
@@ -98,26 +110,22 @@ public class Board : MonoBehaviour
         return -1;
     }
 
-    public bool CheckFourInARow()
+    public bool CheckFourInARow(int col, int row)
     {
-        for (int col = 0; col < COLUMNS; col++)
+        foreach (var dir in _directions)
         {
-            for (int row = 0; row < ROWS; row++)
+            if (CheckFourInARowWithDirection(col, row, dir.x, dir.y))
             {
-                if (CheckHorizontal(col, row) || CheckVertical(col, row)
-                    || CheckDiagonalUp(col, row) || CheckDiagonalDown(col, row))
-                {
-                    return true;
-                }
+                return true;
             }
         }
         return false;
     }
 
     // Checks horizontal match from (col, row) to the right
-    bool CheckHorizontal(int col, int row)
+    bool CheckFourInARowWithDirection(int col, int row, int hDir, int vDir)
     {
-        if (col > COLUMNS - 4)
+        if (col + hDir * 3 >= COLUMNS || col + hDir * 3 < 0 || row + vDir * 3 >= ROWS || row + vDir * 3 < 0)
         {
             return false;
         }
@@ -130,91 +138,13 @@ public class Board : MonoBehaviour
         DiscColor color = disc.Color;
         for (int i = 1; i < 4; i++)
         {
-            disc = GetDisc(col + i, row);
+            disc = GetDisc(col + i * hDir, row + i * vDir);
             if (disc == null || disc.Color != color)
             {
                 return false;
             }
         }
-        Debug.Log("Horizontal match from (" + col + ", " + row + ")");
-        return true;
-    }
-
-    // Checks vertical match from (col, row) up
-    bool CheckVertical(int col, int row)
-    {
-        if (row > ROWS - 4)
-        {
-            return false;
-        }
-
-        var disc = GetDisc(col, row);
-        if (disc == null)
-        {
-            return false;
-        }
-        DiscColor color = disc.Color;
-        for (int i = 1; i < 4; i++)
-        {
-            disc = GetDisc(col, row + i);
-            if (disc == null || disc.Color != color)
-            {
-                return false;
-            }
-        }
-        Debug.Log("Vertical match from (" + col + ", " + row + ")");
-        return true;
-    }
-
-    // Checks diagonal match from (col, row) diagonal up-right
-    bool CheckDiagonalUp(int col, int row)
-    {
-        if (row > ROWS - 4)
-        {
-            return false;
-        }
-
-        var disc = GetDisc(col, row);
-        if (disc == null)
-        {
-            return false;
-        }
-        DiscColor color = disc.Color;
-        for (int i = 1; i < 4; i++)
-        {
-            disc = GetDisc(col + i, row + i);
-            if (disc == null || disc.Color != color)
-            {
-                return false;
-            }
-        }
-        Debug.Log("Diagonal-up match from (" + col + ", " + row + ")");
-        return true;
-    }
-
-    // Checks diagonal match from (col, row) diagonal down-right
-    bool CheckDiagonalDown(int col, int row)
-    {
-        if (row < 4)
-        {
-            return false;
-        }
-
-        var disc = GetDisc(col, row);
-        if (disc == null)
-        {
-            return false;
-        }
-        DiscColor color = disc.Color;
-        for (int i = 0; i < 4; i++)
-        {
-            disc = GetDisc(col - i, row - i);
-            if (disc == null || disc.Color != color)
-            {
-                return false;
-            }
-        }
-        Debug.Log("Diagonal-down match from (" + col + ", " + row + ")");
+        Debug.Log("Match from (" + col + ", " + row + ") with direction (" + hDir + ", " + vDir + ")");
         return true;
     }
 }
