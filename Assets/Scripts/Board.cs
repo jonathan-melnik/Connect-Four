@@ -9,7 +9,7 @@ public class Board : MonoBehaviour
     [SerializeField] private Disc _discPrefab;
     [SerializeField] private Transform _discsContainer;
 
-    private List<List<Disc>> _columns = new List<List<Disc>>();
+    private Disc[] _discs;
     private bool _redPlays = true;
 
     private const float COLUMN_WIDTH = 0.9f;
@@ -19,9 +19,10 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        for (int i = 0; i < COLUMNS; i++)
+        _discs = new Disc[ROWS * COLUMNS];
+        for (int i = 0; i < ROWS * COLUMNS; i++)
         {
-            _columns.Add(new List<Disc>());
+            _discs[i] = new Disc();
         }
     }
 
@@ -39,16 +40,16 @@ public class Board : MonoBehaviour
 
     private void AddDiscAtColumn(int col)
     {
-        if (_columns[col].Count == 6)
+        if (GetDisc(5, col) != null)
         {
             return;
         }
         var disc = Instantiate(_discPrefab);
-        int row = _columns[col].Count;
+        int row = NextRowAtColumn(col);
         disc.transform.position = GetBoardPosition(row, col);
         disc.transform.SetParent(_discsContainer, false);
         disc.Initialize(isRed: _redPlays);
-        _columns[col].Add(disc);
+        SetDisc(row, col, disc);
 
         _redPlays = !_redPlays;
     }
@@ -71,5 +72,27 @@ public class Board : MonoBehaviour
         float x = COLUMN_WIDTH * (col - COLUMNS / 2);
         float y = _bottomRightPoint.position.y + ROW_HEIGHT * (row + 0.5f);
         return new Vector3(x, y, 0);
+    }
+
+    Disc GetDisc(int row, int col)
+    {
+        return _discs[col + row * COLUMNS];
+    }
+
+    void SetDisc(int row, int col, Disc disc)
+    {
+        _discs[col + row * COLUMNS] = disc;
+    }
+
+    int NextRowAtColumn(int col)
+    {
+        for (int row = 0; row < ROWS; row++)
+        {
+            if (GetDisc(row, col) == null)
+            {
+                return row;
+            }
+        }
+        return -1;
     }
 }
