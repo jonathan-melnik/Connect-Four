@@ -10,6 +10,7 @@ public class Board : MonoBehaviour
     [SerializeField] private Transform _discsContainer;
 
     private List<List<Disc>> _columns = new List<List<Disc>>();
+    private bool _redPlays = true;
 
     private const float COLUMN_WIDTH = 0.9f;
     private const float ROW_HEIGHT = 0.8f;
@@ -41,7 +42,10 @@ public class Board : MonoBehaviour
         int row = _columns[col].Count;
         disc.transform.position = GetBoardPosition(row, col);
         disc.transform.SetParent(_discsContainer, false);
+        disc.Initialize(isRed:_redPlays);        
         _columns[col].Add(disc);
+
+        _redPlays = !_redPlays;
     }
 
     private int GetColumnWithMousePos(Vector3 mousePos) 

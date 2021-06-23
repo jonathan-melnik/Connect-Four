@@ -4,15 +4,7 @@ using UnityEngine;
 
 public class Disc : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+    public void Initialize(bool isRed){
+        GetComponent<SpriteRenderer>().color = isRed ? Color.red : Color.black;
     }
 }
