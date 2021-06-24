@@ -19,6 +19,8 @@ public class AIController : Controller
         }
     }
 
+    // Make a move based on difficulty
+    // When difficulty is low it has more chance to make a random move
     private IEnumerator DoMove(float delay)
     {
         yield return new WaitForSeconds(delay);
