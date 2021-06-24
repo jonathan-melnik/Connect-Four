@@ -9,7 +9,7 @@ public class Disc : MonoBehaviour
     public void Initialize(DiscColor color)
     {
         Color = color;
-        GetComponent<SpriteRenderer>().color = color == DiscColor.Red ? UnityEngine.Color.red : UnityEngine.Color.black;
+        GetComponent<SpriteRenderer>().color = color == DiscColor.Red ? new Color(0.9f, 0.1f, 0.1f) : new Color(0.2f, 0.9f, 0.1f, 1);
     }
 }
 

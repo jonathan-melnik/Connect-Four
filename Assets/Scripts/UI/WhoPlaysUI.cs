@@ -17,6 +17,6 @@ public class WhoPlaysUI : MonoBehaviour
         {
             _txt.text = "YOU PLAY\n";
         }
-        _txt.text += color == DiscColor.Red ? "RED" : "BLACK";
+        _txt.text += color == DiscColor.Red ? "RED" : "GREEN";
     }
 }
