@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The player controller handles input by a human player
 public class PlayerController : Controller
 {
     public override void CanMove(bool canMove)

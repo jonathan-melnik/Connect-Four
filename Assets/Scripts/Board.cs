@@ -5,6 +5,8 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 
+// Board creates and manages the discs.
+// It also has checks for winning condition and a method to get the best move for the AI
 public class Board : MonoBehaviour
 {
     [SerializeField] private Transform _topLeftPoint;
@@ -38,24 +40,17 @@ public class Board : MonoBehaviour
             new Vector2Int(1,1),
             new Vector2Int(1,-1)
         };
-
-        /*AddDiscAtColumn(1, DiscColor.Red, true, null);
-        AddDiscAtColumn(2, DiscColor.Red, true, null);
-        AddDiscAtColumn(3, DiscColor.Red, true, null);
-        AddDiscAtColumn(4, DiscColor.Black, true, null);
-        AddDiscAtColumn(4, DiscColor.Red, true, null);
-        AddDiscAtColumn(5, DiscColor.Black, true, null);
-        AddDiscAtColumn(5, DiscColor.Black, true, null);
-        AddDiscAtColumn(6, DiscColor.Black, true, null);
-        AddDiscAtColumn(6, DiscColor.Red, true, null);
-        */
     }
 
+    // Check if a disc can be added to a certain column.
+    // If the top position is empty then a disc can be added
     public bool CanAddDiscAtColumn(int col)
     {
         return GetDisc(col, 5) == null;
     }
 
+    // Creates a new disc and adds it to the board at a certain column
+    // The disc appears with an animation
     public void AddDiscAtColumn(int col, DiscColor color, bool isAI, Action<DiscColor, bool, bool> completeCallback)
     {
         int row = NextRowAtColumn(col);
@@ -75,6 +70,8 @@ public class Board : MonoBehaviour
             .setOnComplete(() => completeCallback?.Invoke(color, isAI, CheckFourInARow(col, row)));
     }
 
+    // Get a column from mouse position
+    // If clicked outside the board, returns -1
     public int GetColumnWithMousePos(Vector3 mousePos)
     {
         var pos = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, -Camera.main.transform.position.z));
@@ -88,6 +85,7 @@ public class Board : MonoBehaviour
         return Mathf.Min(6, Mathf.FloorToInt(7 * (pos.x - topLeft.x) / (bottomRight.x - topLeft.x)));
     }
 
+    // Get the world position of a (col,row)
     private Vector3 GetBoardPosition(int col, int row)
     {
         float x = COLUMN_WIDTH * (col - COLUMNS / 2);
@@ -95,6 +93,7 @@ public class Board : MonoBehaviour
         return new Vector3(x, y, 0);
     }
 
+    // Get the position from where the discs are dropped
     private Vector3 GetDropPosition(int col, int row)
     {
         return GetBoardPosition(col, ROWS - 1);
@@ -110,6 +109,8 @@ public class Board : MonoBehaviour
         _discs[col + row * COLUMNS] = disc;
     }
 
+    // Get the next empty row for a certain column
+    // If the column is full return -1
     private int NextRowAtColumn(int col)
     {
         for (int row = 0; row < ROWS; row++)
@@ -122,6 +123,7 @@ public class Board : MonoBehaviour
         return -1;
     }
 
+    // Check if a match was made that has (col, row)
     public bool CheckFourInARow(int col, int row)
     {
         var disc = GetDisc(col, row);
@@ -136,7 +138,7 @@ public class Board : MonoBehaviour
         return false;
     }
 
-    // Checks if there are 3 discs with color <color> around (col,row) in direction (hDir,vDir)
+    // Checks if there are 3 discs with color <color> around (col,row) in direction <dir>
     private bool CheckFourInARowWithDirection(DiscColor color, int col, int row, Vector2Int dir)
     {
         int count = 0;
@@ -150,6 +152,7 @@ public class Board : MonoBehaviour
         return false;
     }
 
+    // Get the amount of discs that are of color <color> from this (col, row) in a direction <dir>
     private int CountInHalfDirection(DiscColor color, int col, int row, Vector2Int dir)
     {
         int count = 0;
@@ -173,14 +176,15 @@ public class Board : MonoBehaviour
         return count;
     }
 
+    // Check if the board is complete
     public bool IsComplete()
     {
         return _discsCount == ROWS * COLUMNS;
     }
 
+    // Get a column where to play. Useful for AI to know where to play next
     public int GetGoodMove(DiscColor color)
     {
-        //Debug.Log("Get good move");
         // First check if there's any position to win
         int col = GetColumnForMatch(color);
         if (col != -1)
@@ -199,6 +203,7 @@ public class Board : MonoBehaviour
         return GetColumnForPotentialMatchInDirections(color, _directions);
     }
 
+    // Check every column to see if there's a possible match
     private int GetColumnForMatch(DiscColor color)
     {
         for (int col = 0; col < COLUMNS; col++)
@@ -219,6 +224,8 @@ public class Board : MonoBehaviour
         return -1;
     }
 
+    // Goes through every column and for each column goes through every empty row and checks what's the potential of making a match by adding
+    // a disc in the empty slots. It adds the potential for each column to get the column with the highest potential.
     private int GetColumnForPotentialMatchInDirections(DiscColor color, List<Vector2Int> directions)
     {
         float maxPotential = -10;
@@ -241,7 +248,6 @@ public class Board : MonoBehaviour
                     if (potentialAdd > 0)
                     {
                         positivePotential += potentialAdd;
-                        //Debug.Log("Col: " + col + ", dir: " + dir + ", potential: " + potentialAdd);
                     }
                     totalPotential += potentialAdd;
                 }
@@ -250,15 +256,15 @@ public class Board : MonoBehaviour
                 {
                     maxPotential = potential;
                     maxPotentialCol = col;
-                    //Debug.Log("maxPotential = " + maxPotential + " at " + new Vector2Int(col, row));
                 }
             }
         }
 
-        //Debug.Log("Picked col:" + maxPotentialCol + " with potential: " + maxPotential);
         return maxPotentialCol;
     }
 
+    // Get the potential of a match in a certain direction
+    // The potential is calculated by weightning the amount of discs already placed and the amount that needed to be piled up to place the needed ones    
     private float GetPotentialMatchInDirection(DiscColor color, int col, int row, Vector2Int dir)
     {
         int count = 0;
@@ -346,6 +352,7 @@ public class Board : MonoBehaviour
         return bestWindow;
     }
 
+    // Return if a position is in bounds
     private bool IsValidPosition(Vector2Int pos)
     {
         return pos.x >= 0 && pos.y >= 0 && pos.x < COLUMNS && pos.y < ROWS;

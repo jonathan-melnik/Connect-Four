@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Discs can have one of two colors
 public class Disc : MonoBehaviour
 {
     public DiscColor Color { get; private set; }

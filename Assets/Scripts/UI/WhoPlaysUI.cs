@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+// WhoPlaysUI manages the panel that shows who's turn is it
 public class WhoPlaysUI : MonoBehaviour
 {
     [SerializeField] TMP_Text _txt;

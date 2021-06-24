@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The AI controller handles input by a AI player
+// The difficulty at which it plays can be set
 public class AIController : Controller
 {
     [Range(0, 9)]
@@ -47,6 +49,8 @@ public class AIController : Controller
         AddDiscAtColumn?.Invoke(randomCol);
     }
 
+    // Make a move that tries to be the best move possible
+    // It will make a match if possible or prevent a match from the opponent
     private void MakeGoodMove()
     {
         int col = _board.GetGoodMove(Color);

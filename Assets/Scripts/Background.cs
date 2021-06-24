@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// The background has an animated effect using a shader
 public class Background : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         StartCoroutine(ScheduleAnimateMaterial());
     }

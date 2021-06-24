@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// Game handles the logic for the gameplay and assigns control to each control one at a time
+// Also handles end game conditions
 public class Game : MonoBehaviour
 {
     [SerializeField] Controller _redController;
