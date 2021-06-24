@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -20,7 +21,7 @@ public class Board : MonoBehaviour
     public const int COLUMNS = 7;
     public const int ROWS = 6;
     private const float COUNT_WEIGHT = 1;
-    private const float PILING_WEIGHT = 0.5f;
+    private const float PILING_WEIGHT = 0.75f;
 
     private void Start()
     {
@@ -37,6 +38,17 @@ public class Board : MonoBehaviour
             new Vector2Int(1,1),
             new Vector2Int(1,-1)
         };
+
+        /*AddDiscAtColumn(1, DiscColor.Red, true, null);
+        AddDiscAtColumn(2, DiscColor.Red, true, null);
+        AddDiscAtColumn(3, DiscColor.Red, true, null);
+        AddDiscAtColumn(4, DiscColor.Black, true, null);
+        AddDiscAtColumn(4, DiscColor.Red, true, null);
+        AddDiscAtColumn(5, DiscColor.Black, true, null);
+        AddDiscAtColumn(5, DiscColor.Black, true, null);
+        AddDiscAtColumn(6, DiscColor.Black, true, null);
+        AddDiscAtColumn(6, DiscColor.Red, true, null);
+        */
     }
 
     public bool CanAddDiscAtColumn(int col)
@@ -88,22 +100,17 @@ public class Board : MonoBehaviour
         return GetBoardPosition(col, ROWS - 1);
     }
 
-    Disc GetDisc(Vector2Int pos)
-    {
-        return GetDisc(pos.x, pos.y);
-    }
-
-    Disc GetDisc(int col, int row)
+    private Disc GetDisc(int col, int row)
     {
         return _discs[col + row * COLUMNS];
     }
 
-    void SetDisc(int col, int row, Disc disc)
+    private void SetDisc(int col, int row, Disc disc)
     {
         _discs[col + row * COLUMNS] = disc;
     }
 
-    int NextRowAtColumn(int col)
+    private int NextRowAtColumn(int col)
     {
         for (int row = 0; row < ROWS; row++)
         {
@@ -130,7 +137,7 @@ public class Board : MonoBehaviour
     }
 
     // Checks if there are 3 discs with color <color> around (col,row) in direction (hDir,vDir)
-    bool CheckFourInARowWithDirection(DiscColor color, int col, int row, Vector2Int dir)
+    private bool CheckFourInARowWithDirection(DiscColor color, int col, int row, Vector2Int dir)
     {
         int count = 0;
         count += CountInHalfDirection(color, col, row, dir);
@@ -180,14 +187,7 @@ public class Board : MonoBehaviour
             return col;
         }
 
-        col = GetColumnForPotentialStraightMatch(color);
-        if (col != -1)
-        {
-            return col;
-        }
-
-        col = GetColumnForPotentialDiagonalMatch(color);
-        return col;
+        return GetColumnForPotentialMatchInDirections(color, _directions);
     }
 
     private int GetColumnForMatch(DiscColor color)
@@ -210,40 +210,43 @@ public class Board : MonoBehaviour
         return -1;
     }
 
-    private int GetColumnForPotentialStraightMatch(DiscColor color)
-    {
-        var directions = new List<Vector2Int>() { new Vector2Int(1, 0), new Vector2Int(0, 1) };
-        return GetColumnForPotentialMatchInDirections(color, directions);
-    }
-
-    private int GetColumnForPotentialDiagonalMatch(DiscColor color)
-    {
-        var directions = new List<Vector2Int>() { new Vector2Int(-1, -1), new Vector2Int(1, -1) };
-        return GetColumnForPotentialMatchInDirections(color, directions);
-    }
-
     private int GetColumnForPotentialMatchInDirections(DiscColor color, List<Vector2Int> directions)
     {
-        float maxPotential = 0;
+        float maxPotential = -10;
         int maxPotentialCol = -1;
         for (int col = 0; col < COLUMNS; col++)
         {
-            int row = NextRowAtColumn(col);
-            if (row == -1)
+            int nextRow = NextRowAtColumn(col);
+            if (nextRow == -1)
             {
                 continue;
             }
-            foreach (var dir in directions)
+            for (int row = nextRow; row < ROWS; row++) // check all positions from this one up, to see if there are potential matches
             {
-                float potential = GetPotentialMatchInDirection(color, col, row, dir);
-                Debug.Log("Col: " + col + ", dir: " + dir + ", potential: " + potential);
-                if (potential > maxPotential)
+                float positivePotential = 0;
+                float totalPotential = 0;
+                // Get the potential for all directions for this position(positive potentials from different directions add up)
+                foreach (var dir in directions)
+                {
+                    float potentialAdd = GetPotentialMatchInDirection(color, col, row, dir);
+                    if (potentialAdd > 0)
+                    {
+                        positivePotential += potentialAdd;
+                        Debug.Log("Col: " + col + ", dir: " + dir + ", potential: " + potentialAdd);
+                    }
+                    totalPotential += potentialAdd;
+                }
+                float potential = positivePotential >= 0 ? positivePotential : totalPotential; // if there is at least one positive potential, I use that, if not I use the sum of all negative potentials
+                if (potential > maxPotential || (potential == maxPotential && UnityEngine.Random.value < 0.5f)) // if same potential choose randomly
                 {
                     maxPotential = potential;
                     maxPotentialCol = col;
+                    Debug.Log("maxPotential = " + maxPotential + " at " + new Vector2Int(col, row));
                 }
             }
         }
+
+        Debug.Log("Picked col:" + maxPotentialCol + " with potential: " + maxPotential);
         return maxPotentialCol;
     }
 
@@ -261,21 +264,21 @@ public class Board : MonoBehaviour
         foreach (var pos in bestWindow)
         {
             var disc = GetDisc(pos.x, pos.y);
-            if (dir.x != 0) // do not count piling if piling vertically because it would pile onto the same color each turn
-            {
-                pilingNeeded += Mathf.Abs(pos.y - NextRowAtColumn(pos.x));
-            }
             if (disc != null)
             {
                 count++;
+            }
+            else if (dir.x != 0) // do not count piling if piling vertically because it would pile onto the same color each turn
+            {
+                pilingNeeded += Mathf.Abs(pos.y - NextRowAtColumn(pos.x));
             }
         }
 
         if (pilingNeeded > 0)
         {
-            Debug.Log("pos:(" + col + ", " + row + "), dir: " + dir + ", count: " + count + ", pilingNeeded: " + pilingNeeded);
+            //Debug.Log("pos:(" + col + ", " + row + "), dir: " + dir + ", count: " + count + ", pilingNeeded: " + pilingNeeded + " " + string.Join(",", bestWindow));
         }
-        return count * COUNT_WEIGHT - pilingNeeded * PILING_WEIGHT;
+        return 1 + count * COUNT_WEIGHT - pilingNeeded * PILING_WEIGHT;
     }
 
     // From 7 discs(3 to each side of the disc I'm looking at) take the best window of 4.
