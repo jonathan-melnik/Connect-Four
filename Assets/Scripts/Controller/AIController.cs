@@ -6,9 +6,10 @@ public class AIController : Controller
 {
     public override void CanMove(bool canMove)
     {
+        base.CanMove(canMove);
         if (canMove)
         {
-            float delay = Random.Range(0.3f, 1.0f); // give some random delay for the AI
+            float delay = Random.Range(0.5f, 1.5f); // give some random delay for the AI
             StartCoroutine(DoMove(delay));
         }
     }

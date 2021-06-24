@@ -6,6 +6,7 @@ public class PlayerController : Controller
 {
     public override void CanMove(bool canMove)
     {
+        base.CanMove(canMove);
         enabled = canMove;
     }
 

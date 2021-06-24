@@ -7,12 +7,17 @@ public abstract class Controller : MonoBehaviour
 {
     public Action<int> AddDiscAtColumn;
     protected Board _board;
+    public DiscColor Color { get; private set; }
+    public bool IsActive { get; protected set; }
 
-    public void Initialize(Board board, bool canMove)
+    public void Initialize(Board board, DiscColor color)
     {
         _board = board;
-        CanMove(canMove);
+        Color = color;
     }
 
-    public abstract void CanMove(bool canMove);
+    public virtual void CanMove(bool canMove)
+    {
+        IsActive = canMove;
+    }
 }
