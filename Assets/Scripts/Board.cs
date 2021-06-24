@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Board : MonoBehaviour
@@ -18,6 +19,8 @@ public class Board : MonoBehaviour
     private const float ROW_HEIGHT = 0.8f;
     public const int COLUMNS = 7;
     public const int ROWS = 6;
+    private const float COUNT_WEIGHT = 1;
+    private const float PILING_WEIGHT = 0.5f;
 
     private void Start()
     {
@@ -30,12 +33,9 @@ public class Board : MonoBehaviour
         _directions = new List<Vector2Int>()
         {
             new Vector2Int(1,0),
-            new Vector2Int(-1,0),
-            new Vector2Int(0, -1),
+            new Vector2Int(0, 1),
             new Vector2Int(1,1),
-            new Vector2Int(1,-1),
-            new Vector2Int(-1, 1),
-            new Vector2Int(-1, -1)
+            new Vector2Int(1,-1)
         };
     }
 
@@ -88,6 +88,11 @@ public class Board : MonoBehaviour
         return GetBoardPosition(col, ROWS - 1);
     }
 
+    Disc GetDisc(Vector2Int pos)
+    {
+        return GetDisc(pos.x, pos.y);
+    }
+
     Disc GetDisc(int col, int row)
     {
         return _discs[col + row * COLUMNS];
@@ -112,9 +117,11 @@ public class Board : MonoBehaviour
 
     public bool CheckFourInARow(int col, int row)
     {
+        var disc = GetDisc(col, row);
         foreach (var dir in _directions)
         {
-            if (CheckFourInARowWithDirection(col, row, dir.x, dir.y))
+            // Check in all directions if there are 4 discs with the same color as disc
+            if (CheckFourInARowWithDirection(disc.Color, col, row, dir))
             {
                 return true;
             }
@@ -122,34 +129,213 @@ public class Board : MonoBehaviour
         return false;
     }
 
-    // Checks horizontal match from (col, row) to the right
-    bool CheckFourInARowWithDirection(int col, int row, int hDir, int vDir)
+    // Checks if there are 3 discs with color <color> around (col,row) in direction (hDir,vDir)
+    bool CheckFourInARowWithDirection(DiscColor color, int col, int row, Vector2Int dir)
     {
-        if (col + hDir * 3 >= COLUMNS || col + hDir * 3 < 0 || row + vDir * 3 >= ROWS || row + vDir * 3 < 0)
+        int count = 0;
+        count += CountInHalfDirection(color, col, row, dir);
+        count += CountInHalfDirection(color, col, row, -dir);
+        if (count == 3)
         {
-            return false;
+            Debug.Log("Match from (" + col + ", " + row + ") with direction: " + dir);
+            return true;
         }
+        return false;
+    }
 
-        var disc = GetDisc(col, row);
-        if (disc == null)
+    private int CountInHalfDirection(DiscColor color, int col, int row, Vector2Int dir)
+    {
+        int count = 0;
+        for (int i = 1; i <= 3; i++)
         {
-            return false;
-        }
-        DiscColor color = disc.Color;
-        for (int i = 1; i < 4; i++)
-        {
-            disc = GetDisc(col + i * hDir, row + i * vDir);
+            var pos = new Vector2Int(col + i * dir.x, row + i * dir.y);
+            if (!IsValidPosition(pos))
+            {
+                continue;
+            }
+            var disc = GetDisc(pos.x, pos.y);
             if (disc == null || disc.Color != color)
             {
-                return false;
+                break;
+            }
+            else if (disc != null)
+            {
+                count++;
             }
         }
-        Debug.Log("Match from (" + col + ", " + row + ") with direction (" + hDir + ", " + vDir + ")");
-        return true;
+        return count;
     }
 
     public bool IsComplete()
     {
         return _discsCount == ROWS * COLUMNS;
+    }
+
+    public int GetGoodMove(DiscColor color)
+    {
+        Debug.Log("Get good move");
+        int col = GetColumnForMatch(color);
+        if (col != -1)
+        {
+            return col;
+        }
+
+        col = GetColumnForPotentialStraightMatch(color);
+        if (col != -1)
+        {
+            return col;
+        }
+
+        col = GetColumnForPotentialDiagonalMatch(color);
+        return col;
+    }
+
+    private int GetColumnForMatch(DiscColor color)
+    {
+        for (int col = 0; col < COLUMNS; col++)
+        {
+            int row = NextRowAtColumn(col);
+            if (row == -1)
+            {
+                continue;
+            }
+            foreach (var dir in _directions)
+            {
+                if (CheckFourInARowWithDirection(color, col, row, dir))
+                {
+                    return col;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private int GetColumnForPotentialStraightMatch(DiscColor color)
+    {
+        var directions = new List<Vector2Int>() { new Vector2Int(1, 0), new Vector2Int(0, 1) };
+        return GetColumnForPotentialMatchInDirections(color, directions);
+    }
+
+    private int GetColumnForPotentialDiagonalMatch(DiscColor color)
+    {
+        var directions = new List<Vector2Int>() { new Vector2Int(-1, -1), new Vector2Int(1, -1) };
+        return GetColumnForPotentialMatchInDirections(color, directions);
+    }
+
+    private int GetColumnForPotentialMatchInDirections(DiscColor color, List<Vector2Int> directions)
+    {
+        float maxPotential = 0;
+        int maxPotentialCol = -1;
+        for (int col = 0; col < COLUMNS; col++)
+        {
+            int row = NextRowAtColumn(col);
+            if (row == -1)
+            {
+                continue;
+            }
+            foreach (var dir in directions)
+            {
+                float potential = GetPotentialMatchInDirection(color, col, row, dir);
+                Debug.Log("Col: " + col + ", dir: " + dir + ", potential: " + potential);
+                if (potential > maxPotential)
+                {
+                    maxPotential = potential;
+                    maxPotentialCol = col;
+                }
+            }
+        }
+        return maxPotentialCol;
+    }
+
+    private float GetPotentialMatchInDirection(DiscColor color, int col, int row, Vector2Int dir)
+    {
+        int count = 0;
+        int pilingNeeded = 0;
+        var bestWindow = GetBestFourDiscWindow(color, col, row, dir);
+
+        if (bestWindow == null)
+        {
+            return -10; // very low potential as this position cannot make a match
+        }
+
+        foreach (var pos in bestWindow)
+        {
+            var disc = GetDisc(pos.x, pos.y);
+            if (dir.x != 0) // do not count piling if piling vertically because it would pile onto the same color each turn
+            {
+                pilingNeeded += Mathf.Abs(pos.y - NextRowAtColumn(pos.x));
+            }
+            if (disc != null)
+            {
+                count++;
+            }
+        }
+
+        if (pilingNeeded > 0)
+        {
+            Debug.Log("pos:(" + col + ", " + row + "), dir: " + dir + ", count: " + count + ", pilingNeeded: " + pilingNeeded);
+        }
+        return count * COUNT_WEIGHT - pilingNeeded * PILING_WEIGHT;
+    }
+
+    // From 7 discs(3 to each side of the disc I'm looking at) take the best window of 4.
+    // The best window is the one with most discs of the center disc's color and that does not have any discs of the other color
+    // If non can be found, return null
+    private List<Vector2Int> GetBestFourDiscWindow(DiscColor color, int col, int row, Vector2Int dir)
+    {
+        int bestOffset = 0; // best window offset
+        int bestCount = -1; // count of discs of this color in the best window
+        for (int offset = -3; offset <= 0; offset++)
+        {
+            int count = 0;
+            int countPlusEmpty = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                var pos = new Vector2Int(col + (i + offset) * dir.x, row + (i + offset) * dir.y);
+                if (!IsValidPosition(pos))
+                {
+                    break;
+                }
+                var disc = GetDisc(pos.x, pos.y);
+                if (disc != null && disc.Color != color)
+                {
+                    break;
+                }
+                else
+                {
+                    countPlusEmpty++;
+                    if (disc != null)
+                    {
+                        count++;
+                    }
+                }
+            }
+            if (countPlusEmpty >= 4) // if it can be a possible match
+            {
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    bestOffset = offset;
+                }
+            }
+        }
+
+        if (bestCount == -1)
+        {
+            return null;
+        }
+
+        var bestWindow = new List<Vector2Int>();
+        for (int i = 0; i < 4; i++)
+        {
+            bestWindow.Add(new Vector2Int(col + (i + bestOffset) * dir.x, row + (i + bestOffset) * dir.y));
+        }
+
+        return bestWindow;
+    }
+
+    private bool IsValidPosition(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.y >= 0 && pos.x < COLUMNS && pos.y < ROWS;
     }
 }
