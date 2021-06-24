@@ -144,7 +144,7 @@ public class Board : MonoBehaviour
         count += CountInHalfDirection(color, col, row, -dir);
         if (count == 3)
         {
-            Debug.Log("Match from (" + col + ", " + row + ") with direction: " + dir);
+            //Debug.Log("Match from (" + col + ", " + row + ") with direction: " + dir);
             return true;
         }
         return false;
@@ -180,13 +180,22 @@ public class Board : MonoBehaviour
 
     public int GetGoodMove(DiscColor color)
     {
-        Debug.Log("Get good move");
+        //Debug.Log("Get good move");
+        // First check if there's any position to win
         int col = GetColumnForMatch(color);
         if (col != -1)
         {
             return col;
         }
 
+        // Then check if there's any position to prevent losing
+        col = GetColumnForMatch(color == DiscColor.Black ? DiscColor.Red : DiscColor.Black);
+        if (col != -1)
+        {
+            return col;
+        }
+
+        // Last return the column that has the best potential placement
         return GetColumnForPotentialMatchInDirections(color, _directions);
     }
 
@@ -232,7 +241,7 @@ public class Board : MonoBehaviour
                     if (potentialAdd > 0)
                     {
                         positivePotential += potentialAdd;
-                        Debug.Log("Col: " + col + ", dir: " + dir + ", potential: " + potentialAdd);
+                        //Debug.Log("Col: " + col + ", dir: " + dir + ", potential: " + potentialAdd);
                     }
                     totalPotential += potentialAdd;
                 }
@@ -241,12 +250,12 @@ public class Board : MonoBehaviour
                 {
                     maxPotential = potential;
                     maxPotentialCol = col;
-                    Debug.Log("maxPotential = " + maxPotential + " at " + new Vector2Int(col, row));
+                    //Debug.Log("maxPotential = " + maxPotential + " at " + new Vector2Int(col, row));
                 }
             }
         }
 
-        Debug.Log("Picked col:" + maxPotentialCol + " with potential: " + maxPotential);
+        //Debug.Log("Picked col:" + maxPotentialCol + " with potential: " + maxPotential);
         return maxPotentialCol;
     }
 
