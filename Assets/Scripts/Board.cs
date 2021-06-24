@@ -146,7 +146,6 @@ public class Board : MonoBehaviour
         count += CountInHalfDirection(color, col, row, -dir);
         if (count == 3)
         {
-            //Debug.Log("Match from (" + col + ", " + row + ") with direction: " + dir);
             return true;
         }
         return false;
@@ -289,10 +288,6 @@ public class Board : MonoBehaviour
             }
         }
 
-        if (pilingNeeded > 0)
-        {
-            //Debug.Log("pos:(" + col + ", " + row + "), dir: " + dir + ", count: " + count + ", pilingNeeded: " + pilingNeeded + " " + string.Join(",", bestWindow));
-        }
         return 1 + count * COUNT_WEIGHT - pilingNeeded * PILING_WEIGHT;
     }
 
