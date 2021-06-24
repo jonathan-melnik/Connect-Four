@@ -51,7 +51,12 @@ public class Game : MonoBehaviour
         _blackController.CanMove(false);
         _redController.CanMove(false);
 
-        if (_board.AddDiscAtColumn(col, color))
+        _board.AddDiscAtColumn(col, color, OnDiscAdded);
+    }
+
+    private void OnDiscAdded(DiscColor color, bool didWin)
+    {
+        if (didWin)
         {
             ShowWin(color);
         }

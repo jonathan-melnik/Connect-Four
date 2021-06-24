@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -43,17 +44,23 @@ public class Board : MonoBehaviour
         return GetDisc(col, 5) == null;
     }
 
-    public bool AddDiscAtColumn(int col, DiscColor color)
+    public void AddDiscAtColumn(int col, DiscColor color, Action<DiscColor, bool> completeCallback)
     {
-        var disc = Instantiate(_discPrefab);
         int row = NextRowAtColumn(col);
-        disc.transform.position = GetBoardPosition(col, row);
+        var dropPosition = GetDropPosition(col, row);
+        var targetPosition = GetBoardPosition(col, row);
+
+        var disc = Instantiate(_discPrefab);
+        disc.transform.position = dropPosition;
         disc.transform.SetParent(_discsContainer, false);
         disc.Initialize(color);
         SetDisc(col, row, disc);
         _discsCount++;
 
-        return CheckFourInARow(col, row);
+        float time = 0.07f * (dropPosition.y - targetPosition.y);
+        LeanTween.move(disc.gameObject, targetPosition, time)
+            .setEase(LeanTweenType.easeOutSine)
+            .setOnComplete(() => completeCallback?.Invoke(color, CheckFourInARow(col, row)));
     }
 
     public int GetColumnWithMousePos(Vector3 mousePos)
@@ -74,6 +81,11 @@ public class Board : MonoBehaviour
         float x = COLUMN_WIDTH * (col - COLUMNS / 2);
         float y = _bottomRightPoint.position.y + ROW_HEIGHT * (row + 0.5f);
         return new Vector3(x, y, 0);
+    }
+
+    private Vector3 GetDropPosition(int col, int row)
+    {
+        return GetBoardPosition(col, ROWS - 1);
     }
 
     Disc GetDisc(int col, int row)
