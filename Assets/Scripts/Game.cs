@@ -48,21 +48,30 @@ public class Game : MonoBehaviour
 
     void AddDiscAtColumn(int col, DiscColor color)
     {
+        bool isAI = activeController is AIController;
+
         _blackController.CanMove(false);
         _redController.CanMove(false);
 
-        _board.AddDiscAtColumn(col, color, OnDiscAdded);
+        _board.AddDiscAtColumn(col, color, isAI, OnDiscAdded);
     }
 
-    private void OnDiscAdded(DiscColor color, bool didWin)
+    private void OnDiscAdded(DiscColor color, bool isAI, bool didWin)
     {
         if (didWin)
         {
-            ShowWin(color);
+            if (isAI)
+            {
+                _uiManager.ShowFailed();
+            }
+            else
+            {
+                _uiManager.ShowWin();
+            }
         }
         else if (_board.IsComplete())
         {
-            ShowBoardComplete();
+            _uiManager.ShowBoardComplete();
         }
         else
         {
@@ -83,16 +92,6 @@ public class Game : MonoBehaviour
     public void Restart()
     {
         SceneManager.LoadScene(0);
-    }
-
-    private void ShowWin(DiscColor color)
-    {
-
-    }
-
-    private void ShowBoardComplete()
-    {
-
     }
 
     private void UpdateWhoPlaysUI()

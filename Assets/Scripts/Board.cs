@@ -44,7 +44,7 @@ public class Board : MonoBehaviour
         return GetDisc(col, 5) == null;
     }
 
-    public void AddDiscAtColumn(int col, DiscColor color, Action<DiscColor, bool> completeCallback)
+    public void AddDiscAtColumn(int col, DiscColor color, bool isAI, Action<DiscColor, bool, bool> completeCallback)
     {
         int row = NextRowAtColumn(col);
         var dropPosition = GetDropPosition(col, row);
@@ -60,7 +60,7 @@ public class Board : MonoBehaviour
         float time = 0.07f * (dropPosition.y - targetPosition.y);
         LeanTween.move(disc.gameObject, targetPosition, time)
             .setEase(LeanTweenType.easeOutSine)
-            .setOnComplete(() => completeCallback?.Invoke(color, CheckFourInARow(col, row)));
+            .setOnComplete(() => completeCallback?.Invoke(color, isAI, CheckFourInARow(col, row)));
     }
 
     public int GetColumnWithMousePos(Vector3 mousePos)
